@@ -103,5 +103,8 @@ Options:
 `);
 	process.exit(0);
 } else {
-	main();
+	await main();
+	for await (const _line of console) {
+		break;
+	}
 }
