@@ -1,0 +1,14 @@
+{
+	"name": "vhp_installer",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@xetrics/prettier-config": "^1.1.0"
+	},
+	"peerDependencies": {
+		"typescript": "^7"
+	},
+	"prettier": "@xetrics/prettier-config"
+}
