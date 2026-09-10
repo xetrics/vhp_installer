@@ -1,0 +1,32 @@
+name: Release
+
+on:
+    push:
+        branches: [master]
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: oven-sh/setup-bun@v2
+
+            - run: bun install --frozen-lockfile
+
+            - name: Read version
+              id: version
+              run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+            - name: Build Executable
+              run: bun build --compile --target=bun-windows-x64 ./src/index.ts --outfile vhp_installer.exe
+
+            - name: Publish Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: v${{ steps.version.outputs.version }}
+                  name: v${{ steps.version.outputs.version }}
+                  files: vhp_installer.exe
