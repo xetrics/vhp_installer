@@ -1,7 +1,7 @@
 import { parseArgs, styleText } from "node:util";
 import path from "node:path";
 import { InstallerError } from "./errors";
-import { LATEST_TAG } from "./constants";
+import { LATEST_TAG, PINNED_MOD_TAG } from "./constants";
 import Github from "./github";
 import type { ReleaseData } from "./types";
 import Steam from "./steam";
@@ -15,7 +15,7 @@ const { values: args } = parseArgs({
 		},
 		tag: {
 			type: "string",
-			default: LATEST_TAG,
+			default: PINNED_MOD_TAG,
 		},
 		help: {
 			type: "boolean",
@@ -48,7 +48,7 @@ async function locateValheimDirectory() {
 }
 
 async function fetchRelease() {
-	console.log("Fetching latest release");
+	console.log("Fetching mod release");
 	const release = await Github.getRelease(args.tag);
 	console.log(`Release: ${release.tag_name} (${release.published_at})`);
 	return release;
@@ -117,7 +117,7 @@ Options:
   --dir <path>   Valheim install directory
                  (default: auto-detects from registry and libraryfolders manifest)
   --tag <tag>    Version tag to install, or "${LATEST_TAG}"
-                 (default: ${LATEST_TAG})
+                 (default: ${PINNED_MOD_TAG})
   --help         Show this help message
 `);
 	process.exit(0);
