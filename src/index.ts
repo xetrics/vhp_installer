@@ -1,20 +1,21 @@
 import { parseArgs, styleText } from "node:util";
 import path from "node:path";
 import { InstallerError } from "./errors";
-import { DEFAULT_VALHEIM_INSTALL_DIR, LATEST_TESTED_VERSION } from "./constants";
+import { LATEST_TAG } from "./constants";
 import Github from "./github";
 import type { ReleaseData } from "./types";
+import Steam from "./steam";
+import { getInstallerVersion } from "./version";
 
 const { values: args } = parseArgs({
 	args: Bun.argv,
 	options: {
 		dir: {
 			type: "string",
-			default: DEFAULT_VALHEIM_INSTALL_DIR,
 		},
 		tag: {
 			type: "string",
-			default: LATEST_TESTED_VERSION,
+			default: LATEST_TAG,
 		},
 		help: {
 			type: "boolean",
@@ -26,14 +27,28 @@ const { values: args } = parseArgs({
 });
 
 async function verifyArgs() {
-	// verify game dir
-	const checkFile = Bun.file(path.join(args.dir, "valheim.exe"));
-	if (!(await checkFile.exists())) {
-		throw new InstallerError(`Game directory is not valid: ${args.dir}`);
+	if (args.dir) {
+		const checkFile = Bun.file(path.join(args.dir, "valheim.exe"));
+		if (!(await checkFile.exists())) {
+			throw new InstallerError(`Game directory is not valid: ${args.dir}`);
+		}
+	}
+}
+
+async function locateValheimDirectory() {
+	console.log("Locating Valheim installation directory");
+	if (args.dir) {
+		console.log("Using provided argument");
+		return args.dir;
+	} else {
+		const valPath = await Steam.getValheimPath();
+		console.log(`Valheim Path: ${valPath}`);
+		return valPath;
 	}
 }
 
 async function fetchRelease() {
+	console.log("Fetching latest release");
 	const release = await Github.getRelease(args.tag);
 	console.log(`Release: ${release.tag_name} (${release.published_at})`);
 	return release;
@@ -51,10 +66,10 @@ async function downloadClient(release: ReleaseData): Promise<[Bun.Archive, Bun.B
 	return [new Bun.Archive(clientBuffer), clientFile];
 }
 
-async function extractClient(archive: Bun.Archive, file: Bun.BunFile) {
+async function extractClient(archive: Bun.Archive, file: Bun.BunFile, outDir: string) {
 	try {
-		console.log(`Extracting bundle into: ${args.dir}`);
-		const count = await archive.extract(args.dir);
+		console.log(`Extracting bundle into: ${outDir}`);
+		const count = await archive.extract(outDir);
 		console.log(`Extracted ${count} files`);
 		await file.delete();
 	} catch (error) {
@@ -76,11 +91,15 @@ async function extractClient(archive: Bun.Archive, file: Bun.BunFile) {
 async function main() {
 	try {
 		console.log(styleText("blue", "== Installing ValheimPlus =="));
+		console.log(`Installer Version: ${getInstallerVersion()}`);
+
 		await verifyArgs();
+		const valheimPath = await locateValheimDirectory();
 		const release = await fetchRelease();
-		const client = await downloadClient(release);
-		await extractClient(...client);
+		const [archive, file] = await downloadClient(release);
+		await extractClient(archive, file, valheimPath);
 		console.log(styleText("green", "Done!"));
+		console.log("Press <ENTER> to exit...");
 	} catch (error) {
 		if (error instanceof InstallerError) {
 			console.error(`Error: ${error.message}`);
@@ -96,9 +115,9 @@ if (args.help) {
 
 Options:
   --dir <path>   Valheim install directory
-                 (default: "${DEFAULT_VALHEIM_INSTALL_DIR}")
-  --tag <tag>    Version tag to install, or "latest"
-                 (default: ${LATEST_TESTED_VERSION})
+                 (default: auto-detects from registry and libraryfolders manifest)
+  --tag <tag>    Version tag to install, or "${LATEST_TAG}"
+                 (default: ${LATEST_TAG})
   --help         Show this help message
 `);
 	process.exit(0);

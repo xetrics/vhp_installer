@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import type { ReleaseData } from "./types";
-import { LATEST_RELEASE_URL, TAG_RELEASE_URL, WINDOWS_ASSET_NAME } from "./constants";
+import { LATEST_RELEASE_URL, LATEST_TAG, TAG_RELEASE_URL, WINDOWS_ASSET_NAME } from "./constants";
 import { InstallerError } from "./errors";
 import type { BunFile } from "bun";
 
@@ -10,7 +10,7 @@ const headers = { "User-Agent": "Fetch-App" };
 export default class Github {
 	static async getRelease(tag: string): Promise<ReleaseData> {
 		try {
-			const response = await fetch(tag === "latest" ? LATEST_RELEASE_URL : TAG_RELEASE_URL(tag), { headers });
+			const response = await fetch(tag === LATEST_TAG ? LATEST_RELEASE_URL : TAG_RELEASE_URL(tag), { headers });
 			if (!response.ok) {
 				if (response.status === 404) {
 					throw new InstallerError(`tag not found`);

@@ -1,9 +1,13 @@
 {
 	"name": "vhp_installer",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,
+	"scripts": {
+		"start": "bun run src/index.ts",
+		"compile": "bun build --compile --target=bun-windows-x64 ./src/index.ts --outfile vhp_installer.exe"
+	},
 	"devDependencies": {
 		"@types/bun": "latest",
 		"@xetrics/prettier-config": "^1.1.0"
@@ -11,5 +15,8 @@
 	"peerDependencies": {
 		"typescript": "^7"
 	},
-	"prettier": "@xetrics/prettier-config"
+	"prettier": "@xetrics/prettier-config",
+	"dependencies": {
+		"vdf-parser": "^1.2.1"
+	}
 }

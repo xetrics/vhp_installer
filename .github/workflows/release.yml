@@ -22,7 +22,7 @@ jobs:
               run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
             - name: Build Executable
-              run: bun build --compile --target=bun-windows-x64 ./src/index.ts --outfile vhp_installer.exe
+              run: bun run compile -- --define BUILD_VERSION='"${{ steps.version.outputs.version }}"'
 
             - name: Publish Release
               uses: softprops/action-gh-release@v2
